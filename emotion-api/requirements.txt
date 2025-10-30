@@ -5,4 +5,5 @@ python-multipart
 numpy
 opencv-python-headless
 deepface
-gunicorn
+SQLAlchemy
+psycopg2-binary

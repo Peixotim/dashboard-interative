@@ -23,7 +23,7 @@ export default function Home() {
   const [consentPrefs, setConsentPrefs] = useState<ConsentPrefs|null>(null);
   const [sessionId, setSessionId] = useState<string>("");
   const consented = !!consentPrefs;
-  const { data, lastUpdate, loading } = useEmotionData();
+  const { data, lastUpdate, loading, ingest } = useEmotionData();
   const atual = data.at(-1);
   const scoreSums: Record<string, number> = {};
   data.forEach((d) => {
@@ -68,7 +68,10 @@ export default function Home() {
                 <WebcamCapture onCapture={async (frame) => {
                   if (!sessionId) return;
                   try {
-                    await analyzeFrame({ session_uuid: sessionId, timestamp: Date.now(), frame_base64: frame });
+                    const resp = await analyzeFrame({ session_uuid: sessionId, timestamp: Date.now(), frame_base64: frame });
+                    if (resp?.dominant) {
+                      ingest({ timestamp: Date.now(), dominant: resp.dominant, intensity: resp.intensity, scores: resp.scores });
+                    }
                   } catch (e) {
                     console.warn("analyzeFrame error", e);
                   }
