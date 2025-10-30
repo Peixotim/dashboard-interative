@@ -1,26 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@400;600;700&family=Poppins:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #0e0e10;
+  --color-bg-light: #f8fafc;
+  --color-bg-gradient: linear-gradient(120deg, #101012 60%, #1a1a1a 100%);
+  --color-bg-light-gradient: linear-gradient(120deg, #f8fafc 60%, #e7edfa 100%);
+  --color-card: #151419;
+  --color-card-light: #fff;
+  --color-text: #f3f4f6;
+  --color-text-muted: #cbd5e1;
+  --color-heading: #fff;
+  --color-heading-muted: #e5e7eb;
+  --color-text-dark: #15171b;
+  --color-text-muted-dark: #516173;
+  --color-heading-dark: #121212;
+  --color-heading-muted-dark: #465166;
+  --color-border: #232329;
+  --color-border-light: #e2e5ee;
+  --color-accent: #6366F1;
+  --color-accent2: #22D3EE;
+  --color-accent3: #10B981;
+  --font-main: 'Inter', 'Outfit', 'Poppins', 'Geist Sans', Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+  background: var(--color-bg-gradient);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 16px;
+  min-height: 100dvh;
+  transition: background .45s, color .36s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+[data-theme='light'] html, [data-theme='light'] body, html[data-theme='light'], body[data-theme='light'] {
+  background: var(--color-bg-light-gradient);
+  color: var(--color-text-dark);
+}
+
+h1, .h1 {color: var(--color-heading); font-weight:700;}
+h2, .h2 {color: var(--color-heading-muted); font-weight:600;}
+h3, .h3 {color: var(--color-text); font-weight:500;}
+p   {color: var(--color-text-muted);}
+[data-theme='light'] h1, [data-theme='light'] .h1 {color: var(--color-heading-dark);}
+[data-theme='light'] h2, [data-theme='light'] .h2 {color: var(--color-heading-muted-dark);}
+[data-theme='light'] h3, [data-theme='light'] .h3 {color: var(--color-text-dark);}
+[data-theme='light'] p {color: var(--color-text-muted-dark);}
+
+.card-minimal {
+  background: var(--color-card);
+  border: 1.2px solid var(--color-border);
+  border-radius: 1.3rem;
+  box-shadow: 0 3px 12px 0 rgba(19,22,34,0.05);
+  transition: background .44s, border .3s, box-shadow .3s;
+}
+[data-theme='light'] .card-minimal {
+  background: var(--color-card-light);
+  border: 1.2px solid var(--color-border-light);
+  box-shadow: 0 4px 18px 0 rgba(78,83,100,0.08);
+}
+
+.badge-emotion {
+  font-size: .95em;
+  font-weight: 600;
+  padding: .23em .75em;
+  border-radius: 8px;
+  line-height: 1.7;
+  min-width: 52px;
+  box-shadow: 0 2px 5px -3px #10101022;
+  border: 1.2px solid var(--color-border);
+  background: var(--color-bg-gradient);
+  color: var(--color-text);
+  transition: .3s;
+  margin: 3px 4px 3px 0;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+[data-theme='light'] .badge-emotion {
+  background: var(--color-bg-light-gradient);
+  color: var(--color-text-dark);
+  border: 1.2px solid var(--color-border-light);
+  box-shadow: 0 2px 7px -4px #6b728033;
+}
+.badge-emotion:hover, .badge-emotion:focus {
+  filter: brightness(1.06);
+  border-width: 1.8px;
+  box-shadow: 0 6px 15px -4px #23232918;
+  z-index: 2;
+}
+
+/* Tipografia sofisticada */
+h1, .h1 {font-family:var(--font-main);font-weight:700;letter-spacing:-0.02em;}
+h2, .h2 {font-family:var(--font-main);font-weight:600;letter-spacing:-0.01em;}
+h3, .h3 {font-family:var(--font-main);font-weight:500;}
+p   {color:inherit;}
+
+/* Utilitários para layout e espaçamento clean */
+.gap-section {gap:clamp(1.3rem,5vw,2.2rem)}
+.grid-saaspanel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width:768px) {
+  .grid-saaspanel {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width:1200px) {
+  .grid-saaspanel {
+    grid-template-columns: 1fr 2fr 1fr;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+::-webkit-scrollbar {width:7px; background:transparent}
+::-webkit-scrollbar-thumb {background:var(--color-border); border-radius:8px;}
+
+/* Remover todos glow/neon/brilho! */
