@@ -30,7 +30,7 @@ export function Heatmap({ data }: HeatmapProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
-      className="w-full flex flex-col rounded-3xl p-6 bg-zinc-900/50 border border-white/10 shadow-2xl shadow-indigo-900/20"
+      className="w-full h-full flex flex-col rounded-3xl p-6 bg-zinc-900/50 border border-white/10 shadow-2xl shadow-indigo-900/20"
     >
       <h3 className="text-lg font-bold text-white mb-4">Linha do Tempo Emocional</h3>
       
@@ -64,7 +64,6 @@ export function Heatmap({ data }: HeatmapProps) {
           </AnimatePresence>
         </div>
       </TooltipProvider>
-      {/* O erro de compilação estava aqui (provavelmente uma </div> extra) */}
     </motion.div>
   );
 }
