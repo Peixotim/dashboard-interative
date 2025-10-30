@@ -187,7 +187,7 @@ useEffect(() => {
 >
  
   <Button
-    className="w-full sm:w-auto flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30
+    className="w-full sm:w-auto flex-1 bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30
                hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300
                hover:scale-[1.03] active:scale-[0.98] group flex items-center gap-2"
     size="lg"
