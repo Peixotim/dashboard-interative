@@ -2,22 +2,24 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #0e0e10;
-  --color-bg-light: #f8fafc;
-  --color-bg-gradient: linear-gradient(120deg, #101012 60%, #1a1a1a 100%);
-  --color-bg-light-gradient: linear-gradient(120deg, #f8fafc 60%, #e7edfa 100%);
-  --color-card: #151419;
+  --color-bg: #000000;
+  --color-bg-light: #f6f8fa;
+  /* Dark premium gradient */
+  --color-bg-gradient: linear-gradient(140deg, #0f1117 0%, #141824 45%, #1b2030 100%);
+  --color-bg-light-gradient: linear-gradient(120deg, #f8fafc 60%, #edefee 100%);
+  /* Card colors */
+  --color-card: #12141b; /* premium deep */
   --color-card-light: #fff;
   --color-text: #f3f4f6;
   --color-text-muted: #cbd5e1;
   --color-heading: #fff;
   --color-heading-muted: #e5e7eb;
-  --color-text-dark: #15171b;
-  --color-text-muted-dark: #516173;
-  --color-heading-dark: #121212;
+  --color-text-dark: #1c1d22;
+  --color-text-muted-dark: #414a57;
+  --color-heading-dark: #10151d;
   --color-heading-muted-dark: #465166;
   --color-border: #232329;
-  --color-border-light: #e2e5ee;
+  --color-border-light: #dbdde8;
   --color-accent: #6366F1;
   --color-accent2: #22D3EE;
   --color-accent3: #10B981;
@@ -25,15 +27,14 @@
 }
 
 html, body {
-  background: var(--color-bg-gradient);
-  color: var(--color-text);
-  font-family: var(--font-main);
-  font-size: 16px;
   min-height: 100dvh;
   transition: background .45s, color .36s;
 }
-
-[data-theme='light'] html, [data-theme='light'] body, html[data-theme='light'], body[data-theme='light'] {
+html[data-theme="dark"], [data-theme="dark"] body {
+  background: var(--color-bg-gradient);
+  color: var(--color-text);
+}
+html[data-theme="light"], [data-theme="light"] body {
   background: var(--color-bg-light-gradient);
   color: var(--color-text-dark);
 }
@@ -51,10 +52,10 @@ p   {color: var(--color-text-muted);}
   background: var(--color-card);
   border: 1.2px solid var(--color-border);
   border-radius: 1.3rem;
-  box-shadow: 0 3px 12px 0 rgba(19,22,34,0.05);
+  box-shadow: 0 3px 12px 0 rgba(21,22,34,0.06);
   transition: background .44s, border .3s, box-shadow .3s;
 }
-[data-theme='light'] .card-minimal {
+[data-theme="light"] .card-minimal {
   background: var(--color-card-light);
   border: 1.2px solid var(--color-border-light);
   box-shadow: 0 4px 18px 0 rgba(78,83,100,0.08);
@@ -75,8 +76,8 @@ p   {color: var(--color-text-muted);}
   margin: 3px 4px 3px 0;
   display: inline-flex; align-items: center; gap: 6px;
 }
-[data-theme='light'] .badge-emotion {
-  background: var(--color-bg-light-gradient);
+[data-theme="light"] .badge-emotion {
+  background: var(--color-bg-light);
   color: var(--color-text-dark);
   border: 1.2px solid var(--color-border-light);
   box-shadow: 0 2px 7px -4px #6b728033;
@@ -84,7 +85,7 @@ p   {color: var(--color-text-muted);}
 .badge-emotion:hover, .badge-emotion:focus {
   filter: brightness(1.06);
   border-width: 1.8px;
-  box-shadow: 0 6px 15px -4px #23232918;
+  box-shadow: 0 6px 15px -4px #6366f153;
   z-index: 2;
 }
 

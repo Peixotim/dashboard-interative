@@ -19,7 +19,7 @@ export default function Home() {
   });
 
   return (
-    <main className="w-full min-h-screen flex flex-col p-2 md:p-6 xl:p-10 gap-section bg-[var(--color-bg)] font-[var(--font-main)]">
+    <main className="w-full min-h-screen flex flex-col bg-transparent p-2 md:p-6 xl:p-10 gap-8 font-[var(--font-main)]">
       <Header lastUpdate={lastUpdate} />
       {loading || !atual ? (
         <div className="flex flex-1 h-[55vh] items-center justify-center">
@@ -29,15 +29,15 @@ export default function Home() {
           </motion.div>
         </div>
       ) : (
-        <div className="w-full grid-saaspanel gap-section mt-1">
-          <div className="flex flex-col gap-section items-stretch">
+        <div className="w-full flex-1 flex flex-col xl:flex-row gap-8 min-h-0">
+          <div className="flex flex-col gap-8 items-stretch xl:w-1/4 min-w-0">
             <EmotionCard emotion={atual.dominant} intensity={atual.intensity} />
             <Heatmap data={data} />
           </div>
-          <div className="flex flex-col gap-section items-stretch">
+          <div className="flex flex-col gap-8 flex-1 min-w-0">
             <TimelineChart data={data} />
           </div>
-          <div className="flex flex-col gap-section items-stretch">
+          <div className="flex flex-col gap-8 items-stretch xl:w-1/4 min-w-0">
             <PieChart scoreSums={scoreSums} />
           </div>
         </div>
