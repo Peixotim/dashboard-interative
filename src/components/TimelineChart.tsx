@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 
 const ranges = [
   { value: "30", label: "Últimos 1:30" },

@@ -25,7 +25,6 @@ export function PieChart({ scoreSums }: PieChartProps) {
   // ✅ Ajustes para o anel de Donut
   const radius = 60;
   const strokeWidth = 18;
-  const circumference = 2 * Math.PI * radius;
 
   // Lógica para desenhar os arcos
   const getArc = (percent: number, startAngle: number) => {
@@ -55,7 +54,7 @@ export function PieChart({ scoreSums }: PieChartProps) {
       <h3 className="text-lg font-bold text-white mb-4">Distribuição de Emoções</h3>
 
       {/* --- Gráfico de Rosca --- */}
-      <div className="flex-1 flex items-center justify-center relative min-h-[160px] w-full">
+      <div className="flex-1 flex items-center justify-center relative min-h-40 w-full">
         <svg width={radius * 2 + strokeWidth} height={radius * 2 + strokeWidth} className="transform -rotate-90">
           <g transform={`translate(${radius + strokeWidth / 2},${radius + strokeWidth / 2})`}>
             {/* Trilha de fundo */}
