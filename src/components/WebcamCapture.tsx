@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Pause, Play, AlertTriangle, Loader2 } from "lucide-react";
+import { Camera, Pause, Play, AlertTriangle, Loader2, CircleDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface WebcamCaptureProps {
   onCapture?: (imgBase64: string) => void;
@@ -18,53 +19,63 @@ export function WebcamCapture({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [started, setStarted] = useState(autoStart);
-  const [frames, setFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [frames, setFrames] = useState<string[]>([]);
 
-  // Iniciar câmera
   async function startCamera() {
     setLoading(true);
     setError(null);
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: true });
       setStream(s);
-      if (videoRef.current) videoRef.current.srcObject = s;
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+      }
       setStarted(true);
     } catch (err) {
       console.error(err);
-      setError("Não foi possível acessar a câmera. Permissão negada ou indisponível.");
+      setError("Não foi possível acessar a câmera. Verifique as permissões.");
     } finally {
       setLoading(false);
     }
   }
 
-  // Parar câmera
+  // ✅ LÓGICA REINTEGRADA: Função para parar a câmera
   function stopCamera() {
     if (stream) {
       stream.getTracks().forEach((t) => t.stop());
       setStream(null);
     }
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
     setStarted(false);
   }
 
-  // Captura periódica
+  // ✅ LÓGICA REINTEGRADA: Captura periódica
   useEffect(() => {
     if (!started || !videoRef.current) return;
 
     intervalRef.current = setInterval(() => {
       const video = videoRef.current!;
       if (!video.videoWidth) return;
+
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
+
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const frame = canvas.toDataURL("image/jpeg", 0.8);
+      
+      // ✅ LÓGICA REINTEGRADA: Atualiza o state 'frames'
       setFrames((prev) => (prev.length >= 30 ? [...prev.slice(1), frame] : [...prev, frame]));
+      
+      // Envia o frame para o componente pai (se a função for fornecida)
       onCapture?.(frame);
     }, captureInterval);
 
@@ -76,113 +87,140 @@ export function WebcamCapture({
   return (
     <motion.div
       layout
-      className="w-full flex flex-col items-center gap-6 rounded-2xl p-6 bg-gradient-to-b from-zinc-900/70 to-zinc-950/50 border border-zinc-800 shadow-[0_0_25px_rgba(99,102,241,0.15)] backdrop-blur-xl"
+      className="w-full max-w-lg mx-auto flex flex-col items-center gap-4 rounded-3xl p-2 bg-white/5 border border-white/10 shadow-2xl shadow-indigo-500/10"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative flex justify-center">
-        <motion.div
-          animate={
-            started
-              ? { boxShadow: ["0 0 0 0 rgba(99,102,241,0.6)", "0 0 0 10px rgba(99,102,241,0)"] }
-              : {}
-          }
-          transition={started ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : {}}
-          className="rounded-2xl p-[3px] bg-gradient-to-r from-indigo-500/60 to-purple-600/60"
-        >
-          <div className="relative w-[240px] h-[180px] sm:w-[300px] sm:h-[220px] rounded-2xl overflow-hidden bg-black/70">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover rounded-2xl"
-            />
-            <AnimatePresence>
+      {/* Container do vídeo 16:9 */}
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden group">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={`w-full h-full object-cover transition-opacity duration-500 ${
+            stream ? "opacity-100" : "opacity-0"
+          }`}
+        />
+
+        {/* --- CAMADA DE OVERLAYS --- */}
+        <AnimatePresence>
+          {(!started || loading || error) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 p-4 text-center"
+            >
               {loading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 gap-2 text-zinc-300"
-                >
-                  <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-                  <span className="text-xs">Ativando câmera...</span>
-                </motion.div>
+                <>
+                  <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+                  <span className="mt-3 text-sm font-medium text-zinc-300">Conectando à câmera...</span>
+                </>
               )}
-
               {error && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-red-300 gap-2 text-sm font-semibold text-center p-3"
-                >
-                  <AlertTriangle className="h-5 w-5" />
-                  {error}
-                </motion.div>
+                <div className="flex flex-col items-center gap-3">
+                  <AlertTriangle className="h-8 w-8 text-red-400" />
+                  <p className="font-semibold text-red-300">{error}</p>
+                  <Button variant="outline" size="sm" onClick={startCamera}>Tentar novamente</Button>
+                </div>
               )}
-
               {!started && !loading && !error && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white/80 gap-2"
-                >
-                  <Camera className="h-9 w-9 text-indigo-300" />
-                  <span className="text-xs font-medium">Webcam pronta para uso</span>
-                </motion.div>
+                <div className="flex flex-col items-center gap-3">
+                  <Camera className="h-12 w-12 text-zinc-600" />
+                  <p className="text-sm font-medium text-zinc-400">Sua câmera está pronta para a análise emocional.</p>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div className="flex items-center gap-4">
-        {!started ? (
-          <Button
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.03] transition-all"
-            onClick={startCamera}
-            disabled={loading}
-          >
-            <Play className="mr-2 h-4 w-4" /> Iniciar Análise
-          </Button>
-        ) : (
-          <Button
-            variant="destructive"
-            onClick={stopCamera}
-            className="px-6 py-2 rounded-xl shadow-md hover:scale-[1.03] transition-all"
-          >
-            <Pause className="mr-2 h-4 w-4" /> Pausar
-          </Button>
-        )}
-        <motion.span
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="text-xs text-zinc-400"
-        >
-          {started ? "Analisando... (captura a cada 2s)" : "Inativa"}
-        </motion.span>
-      </div>
-
-      <AnimatePresence>
-        {started && (
+        {/* Barra de Controles (Pausa e Status) */}
+        {started && !error && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-wrap gap-1 items-center bg-zinc-900/40 rounded-xl p-3 justify-center border border-zinc-800 max-w-[90vw]"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center bg-linear-to-t from-black/60 to-transparent"
           >
-            {frames.slice(-6).map((f, i) => (
-              <img
-                key={i}
-                src={f}
-                alt="captura"
-                className="w-8 h-8 rounded-md object-cover border border-zinc-700"
-              />
-            ))}
+            <div className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium text-white ring-1 ring-white/10">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <CircleDot className="h-3 w-3 text-emerald-400" />
+              </motion.div>
+              Analisando
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-md hover:bg-white/20 text-white ring-1 ring-white/10"
+              onClick={stopCamera}
+            >
+              <Pause className="h-6 w-6" />
+            </Button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </div>
+
+      {/* ✅ ÁREA DE CONTROLE DINÂMICA (Abaixo do vídeo) */}
+      <div className="w-full min-h-[60px] flex items-center justify-center px-2">
+        <AnimatePresence mode="wait">
+          {/* SE a análise NÃO começou, mostra o botão "Iniciar" */}
+          {!started && !error && (
+            <motion.div
+              key="start-button"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.02, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Button
+                  className="w-full bg-linear-to-r from-indigo-500 to-purple-600 text-white font-semibold h-12 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 text-base"
+                  onClick={startCamera}
+                  disabled={loading}
+                >
+                  <Play className="h-5 w-5" />
+                  Iniciar Análise
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* SE a análise começou, mostra a tira de frames */}
+          {started && !error && (
+            <motion.div
+              key="frames-strip"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              <div className="flex flex-wrap gap-2 items-center bg-zinc-950/50 rounded-xl p-2 justify-center border border-white/10 shadow-inner">
+
+                {frames.slice(-7).map((f, i) => (
+                  <Image
+                    key={i}
+                    src={f}
+                    alt={`Captura ${i}`}
+                    unoptimized
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 rounded-md object-cover border-2 border-zinc-700/50"
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
