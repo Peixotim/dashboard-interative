@@ -6,9 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ranges = [
-  { value: "30", label: "Últimos 30 pontos" },
-  { value: "12", label: "Últimos 12 pontos" },
-  { value: "6", label: "Últimos 6 pontos" },
+  { value: "30", label: "Últimos 1:30" },
+  { value: "12", label: "Últimos 1:00" },
+  { value: "6", label: "Últimos 0:30" },
 ];
 
 export function TimelineChart({ data }: { data: EmotionData[] }) {
@@ -23,10 +23,10 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
           <span className="text-xs text-zinc-500 dark:text-zinc-400">Em tempo real</span>
         </div>
         <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="w-[128px] rounded-lg py-1 text-sm border-zinc-400">
+          <SelectTrigger className="w-42 rounded-lg py-1 text-sm border-zinc-400">
             <SelectValue placeholder="Selecione o range" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl bg-bg-0 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 shadow-md">
+          <SelectContent className="rounded-xl bg-bg-0  dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 shadow-md text-white">
             {ranges.map(r => (
               <SelectItem key={r.value} value={r.value} className="rounded-lg text-sm">{r.label}</SelectItem>
             ))}

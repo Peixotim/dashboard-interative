@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Camera, Mic, Fingerprint, Database, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, Camera, Mic, Fingerprint, Database, ChevronDown, ChevronUp, CheckCircle, Sparkles, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const defaultPrefs = {
@@ -16,14 +16,30 @@ export function ConsentGate({ onAccept }: { onAccept: (prefs: typeof defaultPref
   const [prefs, setPrefs] = useState(defaultPrefs);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("emotion_consent");
-    if (stored) {
-      setShowModal(false);
-      onAccept(JSON.parse(stored));
-    }
-  }, []);
+useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem("emotion_consent");
+      if (stored) {
+        const parsed = JSON.parse(stored) as typeof defaultPrefs;
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "camera" in parsed &&
+          "mic" in parsed &&
+          "bio" in parsed &&
+          "storage" in parsed
+        ) {
 
+          onAccept(parsed);
+        } else {
+          console.warn("Stored consent has unexpected shape, ignoring");
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to read/parse stored consent", err);
+    }
+  }, [onAccept]);
   function handleAccept() {
     localStorage.setItem("emotion_consent", JSON.stringify(prefs));
     setShowModal(false);
@@ -61,7 +77,7 @@ export function ConsentGate({ onAccept }: { onAccept: (prefs: typeof defaultPref
             className="relative w-[90%] max-w-lg p-6 bg-white/10 dark:bg-zinc-900/50 border border-white/20 dark:border-zinc-700/60 rounded-3xl shadow-[0_0_50px_rgba(99,102,241,0.3)] backdrop-blur-2xl overflow-hidden"
           >
             {/* Glow decorativo */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-600/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient from-indigo-500/10 via-transparent to-purple-600/10 pointer-events-none" />
 
             {/* Cabeçalho */}
             <div className="flex flex-col items-center text-center relative z-10">
@@ -73,7 +89,7 @@ export function ConsentGate({ onAccept }: { onAccept: (prefs: typeof defaultPref
               </motion.div>
 
               <motion.h2
-                className="text-xl sm:text-2xl font-bold mt-3 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent drop-shadow"
+                className="text-xl sm:text-2xl font-bold mt-3 bg-gradient to-br from-indigo-400 to-cyan-400 bg-clip-text text-transparent drop-shadow"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -162,38 +178,49 @@ export function ConsentGate({ onAccept }: { onAccept: (prefs: typeof defaultPref
             </motion.div>
 
             {/* Botões */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-6 flex flex-col md:flex-row gap-3 z-10"
-            >
-              <Button
-                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-indigo-500/30 transition-all hover:scale-[1.03]"
-                size="lg"
-                onClick={handleAccept}
-              >
-                Aceitar e Continuar
-              </Button>
+{/* Botões */}
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.4 }}
+  className="mt-6 flex flex-col sm:flex-row gap-3 z-10 items-center"
+>
+ 
+  <Button
+    className="w-full sm:w-auto flex-1 bg-gradient from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30
+               hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300
+               hover:scale-[1.03] active:scale-[0.98] group flex items-center gap-2"
+    size="lg"
+    onClick={handleAccept}
+  >
+    <CheckCircle className="h-5 w-5 transition-transform group-hover:rotate-12" />
+    Aceitar e Continuar
+  </Button>
 
-              <Button
-                className="flex-1 bg-transparent border border-indigo-400 text-indigo-400 hover:bg-indigo-500/10 hover:text-white hover:border-indigo-300 transition-all"
-                variant="outline"
-                size="lg"
-                onClick={acceptAll}
-              >
-                Aceitar Todos
-              </Button>
 
-              <Button
-                className="flex-1 border border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all"
-                variant="destructive"
-                size="lg"
-                onClick={handleRefuse}
-              >
-                Recusar e Sair
-              </Button>
-            </motion.div>
+  <Button
+    className="w-full sm:w-auto bg-transparent border-2 border-indigo-400 text-indigo-300
+               hover:bg-indigo-500/20 hover:text-white hover:border-indigo-300 transition-all duration-300
+               active:scale-[0.98] group flex items-center gap-2"
+    variant="outline"
+    size="lg"
+    onClick={acceptAll}
+  >
+    <Sparkles className="h-5 w-5 transition-transform group-hover:scale-125 group-hover:text-yellow-300" />
+    Aceitar Todos
+  </Button>
+
+  <Button
+    className="w-full sm:w-auto text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300
+               active:scale-[0.98] group flex items-center gap-2 px-3"
+    variant="ghost"
+    size="lg"
+    onClick={handleRefuse}
+  >
+    <XCircle className="h-5 w-5" />
+    Recusar
+  </Button>
+</motion.div>
 
             <motion.span
               initial={{ opacity: 0 }}
