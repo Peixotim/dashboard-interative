@@ -20,7 +20,7 @@ type ConsentPrefs = {
 };
 
 export default function Home() {
-  const [consentPrefs, setConsentPrefs] = useState<ConsentPrefs|null>(null);
+  const [consentPrefs, setConsentPrefs] = useState<ConsentPrefs | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
   const consented = !!consentPrefs;
   const { data, lastUpdate, loading, ingest } = useEmotionData();
@@ -62,8 +62,15 @@ export default function Home() {
             </motion.div>
           </div>
         ) : (
-          <div className="w-full flex-1 flex flex-col xl:flex-row gap-8 min-h-0">
-            <div className="flex flex-col gap-8 items-stretch xl:w-1/4 min-w-0">
+          // ✅ NOVO LAYOUT DE GRID ASSIMÉTRICO
+          // Em telas grandes (lg), criamos um grid de 3 colunas.
+          // A coluna da esquerda (sidebar) ocupa 1 fração (col-span-1).
+          // A coluna da direita (principal) ocupa 2 frações (col-span-2).
+          <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
+            
+            {/* --- COLUNA ESQUERDA (Sidebar de Estado Atual) --- */}
+            {/* Ocupa 1 de 3 colunas em telas grandes */}
+            <div className="lg:col-span-1 flex flex-col gap-8">
               {consentPrefs?.camera && (
                 <WebcamCapture onCapture={async (frame) => {
                   if (!sessionId) return;
@@ -78,13 +85,27 @@ export default function Home() {
                 }} />
               )}
               <EmotionCard emotion={atual.dominant} intensity={atual.intensity} />
-              <Heatmap data={data} />
             </div>
-            <div className="flex flex-col gap-8 flex-1 min-w-0">
-              <TimelineChart data={data} />
-            </div>
-            <div className="flex flex-col gap-8 items-stretch xl:w-1/4 min-w-0">
-              <PieChart scoreSums={scoreSums} />
+
+            {/* --- COLUNA DIREITA (Área de Análise Principal) --- */}
+            {/* Ocupa 2 de 3 colunas em telas grandes, dando foco ao gráfico */}
+            <div className="lg:col-span-2 flex flex-col gap-8">
+              
+              {/* Gráfico de Linha principal */}
+              <div className="min-w-0 h-[400px]">
+                <TimelineChart data={data} />
+              </div>
+
+              {/* Sub-grid para PieChart e Heatmap lado a lado */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="min-w-0">
+                  <PieChart scoreSums={scoreSums} />
+                </div>
+                <div className="min-w-0">
+                  <Heatmap data={data} />
+                </div>
+              </div>
+              
             </div>
           </div>
         )}

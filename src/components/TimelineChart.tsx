@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
 import { CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
-import type { EmotionData } from "@/services/emotionService";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ranges = [
   { value: "30", label: "Últimos 1:30" },
@@ -11,63 +10,90 @@ const ranges = [
   { value: "6", label: "Últimos 0:30" },
 ];
 
+// ✅ Componente para o Controle Segmentado (estilo Apple)
+function SegmentedControl({ options, value, onChange }: { options: typeof ranges; value: string; onChange: (val: string) => void }) {
+  return (
+    <div className="flex items-center gap-1 bg-zinc-800/50 p-1 rounded-lg border border-zinc-700">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`relative px-3 py-1 text-xs font-medium transition-colors duration-300 ${
+            value === opt.value ? "text-white" : "text-zinc-400 hover:text-white"
+          }`}
+        >
+          {value === opt.value && (
+            <motion.div
+              layoutId="segmented-control-active-bg"
+              className="absolute inset-0 bg-indigo-600 rounded-md shadow-md"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+          <span className="relative z-10">{opt.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
 export function TimelineChart({ data }: { data: EmotionData[] }) {
   const [range, setRange] = useState("30");
   const chartData = data.slice(-parseInt(range));
 
   return (
-    <Card className="card-minimal rounded-2xl p-0 pt-1 shadow-sm w-full h-124 flex flex-col">
-      <div className="flex items-center justify-between px-6 pt-5 pb-2">
-        <div className="flex flex-col gap-1">
-          <span className="h3 text-base font-semibold">Variação de Intensidade</span>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">Em tempo real</span>
+    // ✅ Card com o mesmo estilo premium dos outros componentes
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="w-full h-full flex flex-col rounded-3xl p-6 bg-zinc-900/50 border border-white/10 shadow-2xl shadow-indigo-900/20"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col">
+          <h3 className="text-lg font-bold text-white">Variação de Intensidade</h3>
+          <p className="text-sm text-zinc-400">Em tempo real</p>
         </div>
-        <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="w-42 rounded-lg py-1 text-sm border-zinc-400">
-            <SelectValue placeholder="Selecione o range" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl bg-bg-0  dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 shadow-md text-white">
-            {ranges.map(r => (
-              <SelectItem key={r.value} value={r.value} className="rounded-lg text-sm">{r.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* ✅ Substituído o <Select> pelo <SegmentedControl> */}
+        <SegmentedControl options={ranges} value={range} onChange={setRange} />
       </div>
-      <div className="px-1 sm:px-4 pb-3 flex-1 min-h-[180px]">
+      
+      <div className="flex-1 min-h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 12, bottom: 3, right: 0, left: -2 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
             <defs>
+              {/* ✅ Gradiente mais suave */}
               <linearGradient id="areaIntensidade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="8%" stopColor="#6366F1" stopOpacity={0.32} />
-                <stop offset="95%" stopColor="#6366F1" stopOpacity={0.01} />
+                <stop offset="5%" stopColor="#818CF8" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#818CF8" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 6" stroke="#23232940" vertical={false} />
+            <CartesianGrid strokeDasharray="1 5" stroke="#ffffff1a" vertical={false} />
             <XAxis
               dataKey="timestamp"
               tickLine={false}
               axisLine={false}
-              tickMargin={6}
-              minTickGap={18}
-              tickFormatter={(t) => new Date(t).toLocaleTimeString("pt-BR", { hour12: false, hour: "2-digit", minute: "2-digit" })}
-              style={{ fontSize: 12, fill: "#888" }}
+              tickMargin={10}
+              tickFormatter={(t) => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              style={{ fontSize: 12, fill: "#a1a1aa" }}
             />
             <YAxis
               domain={[0, 1]}
-              ticks={[0, 0.25, 0.5, 0.75, 1]}
               axisLine={false}
               tickLine={false}
-              width={25}
-              style={{ fontSize: 12, fill: "#6366F1" }}
+              tickFormatter={(v) => `${v * 100}%`} // ✅ Eixo Y com porcentagens
+              style={{ fontSize: 12, fill: "#a1a1aa" }}
             />
             <Tooltip
+              cursor={{ stroke: "#818CF8", strokeWidth: 1, strokeDasharray: "3 3" }}
               content={({ payload, label }) => {
                 if (!payload?.length) return null;
                 const y = payload[0].value as number;
                 return (
-                  <div className="rounded-xl px-3 py-2 bg-zinc-900/90 dark:bg-zinc-800/95 border border-zinc-700 shadow text-xs">
-                    <div className="text-zinc-300 pb-0.5">{new Date(label as string).toLocaleTimeString("pt-BR", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
-                    <div className="font-bold text-[#6366F1]">{Math.round(y*100)}% intensidade</div>
+                  // ✅ Tooltip com efeito "glassmorphism"
+                  <div className="rounded-xl px-3 py-2 bg-zinc-800/80 backdrop-blur-md border border-zinc-700 shadow-lg text-xs">
+                    <div className="text-zinc-300 pb-0.5">{new Date(label as string).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+                    <div className="font-bold text-indigo-400">{Math.round(y*100)}% de intensidade</div>
                   </div>
                 );
               }}
@@ -75,16 +101,30 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
             <Area
               type="monotone"
               dataKey="intensity"
-              stroke="#6366F1"
+              stroke="#818CF8"
               strokeWidth={3}
-              fillOpacity={1}
               fill="url(#areaIntensidade)"
               dot={false}
               isAnimationActive
+              animationDuration={500}
+              // ✅ Ponto ativo que aparece no hover, com animação
+              activeDot={{
+                r: 6,
+                stroke: "#18181b",
+                strokeWidth: 2,
+                fill: "#c7d2fe",
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </Card>
+    </motion.div>
   );
 }
+
+// Definição do tipo EmotionData (coloque em um arquivo separado, ex: 'types.ts')
+export type EmotionData = {
+  timestamp: number;
+  intensity: number;
+  emotion: string;
+};

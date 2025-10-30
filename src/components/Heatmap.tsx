@@ -1,16 +1,17 @@
 "use client";
-import { Card } from "@/components/ui/card";
 import type { EmotionData } from "@/services/emotionService";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+// ✅ Cores atualizadas para o novo design (mais sutis, baseadas no Tailwind)
 const emotionColors: Record<string, string> = {
-  alegria: "bg-[#6366F1]",
-  tristeza: "bg-[#22D3EE]",
-  raiva: "bg-[#F87171]",
-  surpresa: "bg-[#a78bfa]",
-  medo: "bg-[#facc15]",
-  nojo: "bg-[#10B981]",
-  neutro: "bg-zinc-400",
+  alegria: "bg-indigo-500",
+  tristeza: "bg-cyan-500",
+  raiva: "bg-red-500",
+  surpresa: "bg-violet-500",
+  medo: "bg-yellow-500",
+  nojo: "bg-emerald-500",
+  neutro: "bg-zinc-600",
 };
 
 interface HeatmapProps {
@@ -19,24 +20,52 @@ interface HeatmapProps {
 
 export function Heatmap({ data }: HeatmapProps) {
   if (!data.length) return null;
+
+  // Mostra no máximo os últimos 100 pontos de dados para não poluir a tela
+  const recentData = data.slice(-100);
+
   return (
-    <Card className="card-minimal w-full p-4 pt-3 rounded-2xl shadow-sm min-h-[88px]">
-      <h3 className="h3 font-semibold text-zinc-300 mb-2 text-xs uppercase tracking-widest">Linha do Tempo Emocional</h3>
-      <div className="flex gap-[2px] flex-wrap items-end min-h-[28px] pb-1">
-        <AnimatePresence initial={false}>
-          {data.map((item, idx) => (
-            <motion.div
-              key={item.timestamp}
-              className={`w-4 h-8 md:w-5 md:h-10 rounded-md ${emotionColors[item.dominant.toLowerCase()] || "bg-zinc-400"} transition-base`}
-              title={`${item.dominant} (${Math.round(item.intensity * 100)}%) às ${new Date(item.timestamp).toLocaleTimeString("pt-BR")}`}
-              initial={{ scale: 0.73, opacity: .38 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ duration: .29, delay: 0.04*(data.length-idx) }}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
-    </Card>
+    // ✅ Card com o mesmo estilo premium dos outros
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+      className="w-full flex flex-col rounded-3xl p-6 bg-zinc-900/50 border border-white/10 shadow-2xl shadow-indigo-900/20"
+    >
+      <h3 className="text-lg font-bold text-white mb-4">Linha do Tempo Emocional</h3>
+      
+      <TooltipProvider delayDuration={0}>
+        <div className="flex flex-wrap gap-1.5">
+          <AnimatePresence>
+            {recentData.map((item, idx) => (
+              <Tooltip key={item.timestamp}>
+                <TooltipTrigger asChild>
+                  <motion.div
+                    // ✅ Animação de entrada escalonada
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: idx * 0.02 }}
+                    
+                    // ✅ Design dos "quadradinhos" estilo GitHub
+                    className={`w-3.5 h-3.5 rounded-[3px] ${emotionColors[item.dominant.toLowerCase()] || "bg-zinc-700"}`}
+                    style={{ 
+                      // ✅ Intensidade agora controla a opacidade
+                      opacity: Math.max(0.2, item.intensity) 
+                    }}
+                  />
+                </TooltipTrigger>
+                {/* ✅ Tooltip com o mesmo estilo "glassmorphism" */}
+                <TooltipContent className="rounded-md bg-zinc-800/80 backdrop-blur-md border-zinc-700 text-white text-xs">
+                  <p className="font-bold capitalize">{item.dominant} ({Math.round(item.intensity * 100)}%)</p>
+                  <p className="text-zinc-300">{new Date(item.timestamp).toLocaleTimeString("pt-BR")}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </AnimatePresence>
+        </div>
+      </TooltipProvider>
+      {/* O erro de compilação estava aqui (provavelmente uma </div> extra) */}
+    </motion.div>
   );
 }
+

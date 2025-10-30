@@ -2,14 +2,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ✅ Cores alinhadas com o Tailwind (para consistência)
 const emotionColors: Record<string, string> = {
-  alegria: "#6366F1",
-  tristeza: "#22D3EE",
-  raiva: "#F87171",
-  surpresa: "#a78bfa",
-  medo: "#eab308",
-  nojo: "#10B981",
-  neutro: "#9ca3af",
+  alegria: "#6366F1",  // indigo-500
+  tristeza: "#22D3EE", // cyan-500
+  raiva: "#F87171",    // red-400
+  surpresa: "#a78bfa", // violet-400
+  medo: "#facc15",     // yellow-500
+  nojo: "#10B981",     // emerald-600
+  neutro: "#9ca3af",   // zinc-400
 };
 
 interface PieChartProps {
@@ -19,46 +20,70 @@ interface PieChartProps {
 export function PieChart({ scoreSums }: PieChartProps) {
   const data = Object.entries(scoreSums).map(([key, value]) => ({ name: key, value }));
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
-  const [hoveredIdx, setHoveredIdx] = useState<number|null>(null);
-  const radius = 53;
-  const stroke = 18;
-  const centerValue = hoveredIdx !== null ? (data[hoveredIdx]?.value ?? 0) : total;
-  const centerLabel = hoveredIdx !== null ? data[hoveredIdx]?.name : 'TOTAL';
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
+  // ✅ Ajustes para o anel de Donut
+  const radius = 60;
+  const strokeWidth = 18;
+  const circumference = 2 * Math.PI * radius;
+
+  // Lógica para desenhar os arcos
   const getArc = (percent: number, startAngle: number) => {
     const endAngle = startAngle + percent * Math.PI * 2;
-    const x1 = Math.cos(startAngle - Math.PI/2) * radius;
-    const y1 = Math.sin(startAngle - Math.PI/2) * radius;
-    const x2 = Math.cos(endAngle - Math.PI/2) * radius;
-    const y2 = Math.sin(endAngle - Math.PI/2) * radius;
+    const x1 = Math.cos(startAngle - Math.PI / 2) * radius;
+    const y1 = Math.sin(startAngle - Math.PI / 2) * radius;
+    const x2 = Math.cos(endAngle - Math.PI / 2) * radius;
+    const y2 = Math.sin(endAngle - Math.PI / 2) * radius;
     const large = endAngle - startAngle > Math.PI ? 1 : 0;
-    return { d: `M${x1} ${y1} A${radius} ${radius} 0 ${large} 1 ${x2} ${y2}` };
+    return { d: `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}` };
   };
 
   let lastEnd = 0;
 
+  // Valor central (TOTAL ou a emoção em hover)
+  const centerValue = hoveredIdx !== null ? (data[hoveredIdx]?.value ?? 0) : total;
+  const centerLabel = hoveredIdx !== null ? data[hoveredIdx]?.name : 'TOTAL';
+
   return (
-    <div className="card-minimal w-full h-124 flex flex-col rounded-2xl p-5 gap-2 items-center justify-center">
-      <h3 className="h3 font-semibold text-zinc-300 mb-1 mt-1">Distribuição de Emoções</h3>
-      <div className="flex flex-1 items-center justify-center relative min-h-[177px] mb-3 w-full">
-        <svg width={2*radius+24} height={2*radius+24}>
-          <g transform={`translate(${radius+12},${radius+12})`}>
+    // ✅ Card com o mesmo estilo premium dos outros
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+      className="w-full flex flex-col rounded-3xl p-6 bg-zinc-900/50 border border-white/10 shadow-2xl shadow-indigo-900/20"
+    >
+      <h3 className="text-lg font-bold text-white mb-4">Distribuição de Emoções</h3>
+
+      {/* --- Gráfico de Rosca --- */}
+      <div className="flex-1 flex items-center justify-center relative min-h-[160px] w-full">
+        <svg width={radius * 2 + strokeWidth} height={radius * 2 + strokeWidth} className="transform -rotate-90">
+          <g transform={`translate(${radius + strokeWidth / 2},${radius + strokeWidth / 2})`}>
+            {/* Trilha de fundo */}
+            <circle
+              cx={0} cy={0} r={radius}
+              fill="transparent"
+              stroke="#ffffff1a"
+              strokeWidth={strokeWidth}
+            />
+            {/* Arcos das emoções */}
             {data.map((emoc, i) => {
               const percent = emoc.value / total;
               const { d } = getArc(percent, lastEnd);
               const isHovered = hoveredIdx === i;
               lastEnd += percent * Math.PI * 2;
+              
               return (
-                <motion.path key={emoc.name}
+                <motion.path
+                  key={emoc.name}
                   d={d}
-                  stroke={emotionColors[emoc.name]||"#9ca3af"}
+                  stroke={emotionColors[emoc.name] || "#9ca3af"}
                   strokeLinecap="round"
                   fill="none"
-                  strokeWidth={isHovered ? stroke+7 : stroke}
-                  style={{filter: isHovered ? 'drop-shadow(0 2px 13px #23232966)' : undefined, cursor: 'pointer', opacity: isHovered ? 1 : 0.85}}
+                  strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth} // ✅ Efeito de hover sutil
+                  style={{ filter: isHovered ? `drop-shadow(0 0 8px ${emotionColors[emoc.name]})` : 'none', cursor: 'pointer' }}
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
-                  transition={{ duration: .98, delay: .07*i, type:'spring' }}
+                  transition={{ duration: 0.8, delay: 0.1 * i, type: 'spring', bounce: 0 }}
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
                 />
@@ -66,35 +91,45 @@ export function PieChart({ scoreSums }: PieChartProps) {
             })}
           </g>
         </svg>
+        
+        {/* Texto central animado */}
         <AnimatePresence mode="wait">
           <motion.div
+            key={hoveredIdx === null ? "total" : data[hoveredIdx].name}
             className="absolute left-1/2 top-1/2 flex flex-col items-center -translate-x-1/2 -translate-y-1/2 select-none"
-            key={hoveredIdx===null?"total":"val"}
-            initial={{ opacity:.4, scale:.79}} animate={{ opacity:1, scale:1}} exit={{opacity:.5, scale:.8}}
-            transition={{ duration:.25 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
           >
-            <span className="text-zinc-400 font-semibold text-[11px] mb-[-4px] tracking-wide uppercase">{centerLabel}</span>
-            <span style={{ color: hoveredIdx!==null ? emotionColors[data[hoveredIdx]?.name] : "#232329" }} className="text-xl font-extrabold font-[Outfit,sans] mt-1">
-              {hoveredIdx!==null ? Math.round(centerValue*100)+"%" : total.toFixed(2)}
+            <span className="text-3xl font-extrabold" style={{ color: hoveredIdx !== null ? emotionColors[data[hoveredIdx]?.name] : "#FFF" }}>
+              {hoveredIdx !== null ? `${Math.round(centerValue * 100)}%` : total.toFixed(2)}
             </span>
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase">{centerLabel}</span>
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className="flex flex-wrap gap-x-2 gap-y-1 w-full justify-center">
+
+      {/* --- Legenda --- */}
+      <div className="flex flex-wrap gap-2 w-full justify-center mt-4">
         {data.map(({ name, value }, idx) => (
-          <span key={name}
-            className="badge-emotion"
-            style={{borderColor: emotionColors[name], background: hoveredIdx===idx ? emotionColors[name]+"22" : undefined, color: hoveredIdx===idx ? emotionColors[name]:undefined}}
+          <div
+            key={name}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200"
+            style={{
+              borderColor: emotionColors[name] + '80', // Borda com 50% de opacidade
+              backgroundColor: hoveredIdx === idx ? emotionColors[name] + '30' : 'transparent', // Fundo no hover
+              cursor: 'pointer'
+            }}
             onMouseEnter={() => setHoveredIdx(idx)}
             onMouseLeave={() => setHoveredIdx(null)}
           >
-            <span style={{ color: emotionColors[name], fontWeight: hoveredIdx===idx? 700:500 }}>
-              {Math.round(value * 100)}%
-            </span>
-            <span className="capitalize ml-0.5">{name}</span>
-          </span>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: emotionColors[name] }} />
+            <span className="text-xs font-medium text-zinc-300 capitalize">{name}</span>
+            <span className="text-xs font-bold text-white">{Math.round(value * 100)}%</span>
+          </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
