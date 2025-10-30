@@ -1,0 +1,215 @@
+"use client";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShieldCheck, Camera, Mic, Fingerprint, Database, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const defaultPrefs = {
+  camera: true,
+  mic: true,
+  bio: false,
+  storage: false,
+};
+
+export function ConsentGate({ onAccept }: { onAccept: (prefs: typeof defaultPrefs) => void }) {
+  const [showModal, setShowModal] = useState(true);
+  const [prefs, setPrefs] = useState(defaultPrefs);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" && localStorage.getItem("emotion_consent");
+    if (stored) {
+      setShowModal(false);
+      onAccept(JSON.parse(stored));
+    }
+  }, []);
+
+  function handleAccept() {
+    localStorage.setItem("emotion_consent", JSON.stringify(prefs));
+    setShowModal(false);
+    onAccept(prefs);
+  }
+
+  function handleRefuse() {
+    localStorage.removeItem("emotion_consent");
+    window.location.href = "https://www.gov.br/cidadania/pt-br/lgpd";
+  }
+
+  function handleToggle(k: keyof typeof defaultPrefs) {
+    setPrefs((p) => ({ ...p, [k]: !p[k] }));
+  }
+
+  function acceptAll() {
+    setPrefs({ camera: true, mic: true, bio: true, storage: true });
+  }
+
+  return (
+    <AnimatePresence>
+      {showModal && (
+        <motion.div
+          initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+          animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+          exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 40 }}
+            transition={{ type: "spring", damping: 14, stiffness: 120 }}
+            className="relative w-[90%] max-w-lg p-6 bg-white/10 dark:bg-zinc-900/50 border border-white/20 dark:border-zinc-700/60 rounded-3xl shadow-[0_0_50px_rgba(99,102,241,0.3)] backdrop-blur-2xl overflow-hidden"
+          >
+            {/* Glow decorativo */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-600/10 pointer-events-none" />
+
+            {/* Cabeçalho */}
+            <div className="flex flex-col items-center text-center relative z-10">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1.05, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ShieldCheck className="text-indigo-400 w-12 h-12 drop-shadow-lg" />
+              </motion.div>
+
+              <motion.h2
+                className="text-xl sm:text-2xl font-bold mt-3 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent drop-shadow"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                Consentimento de Privacidade
+              </motion.h2>
+
+              <p className="text-sm text-zinc-400 max-w-[90%] mt-2 font-medium leading-relaxed">
+                Precisamos do seu consentimento para acessar a câmera, o microfone e, opcionalmente, armazenar dados
+                para análise emocional. Nada será ativado sem sua permissão.
+              </p>
+            </div>
+
+            {/* Preferências */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-5 flex flex-col gap-3 bg-white/5 rounded-xl border border-white/10 px-4 py-4 shadow-inner relative z-10"
+            >
+              {[
+                { key: "camera", label: "Permitir uso da câmera", icon: <Camera className="h-5 w-5 text-indigo-400" /> },
+                { key: "mic", label: "Permitir uso do microfone", icon: <Mic className="h-5 w-5 text-cyan-400" /> },
+              ].map(({ key, label, icon }) => (
+                <label key={key} className="flex items-center gap-3 cursor-pointer select-none group">
+                  <span>{icon}</span>
+                  <input
+                    type="checkbox"
+                    checked={prefs[key as keyof typeof prefs]}
+                    onChange={() => handleToggle(key as keyof typeof prefs)}
+                    className="accent-indigo-500 w-4 h-4 transition-all duration-200 group-hover:scale-110"
+                  />
+                  <span className="text-sm font-medium text-zinc-200">{label}</span>
+                </label>
+              ))}
+
+              <AnimatePresence>
+                {expanded && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                    className="mt-2 flex flex-col gap-2"
+                  >
+                    <label className="flex items-center gap-3 cursor-pointer select-none group">
+                      <Fingerprint className="h-5 w-5 text-emerald-400" />
+                      <input
+                        type="checkbox"
+                        checked={prefs.bio}
+                        onChange={() => handleToggle("bio")}
+                        className="accent-emerald-400 w-4 h-4 group-hover:scale-110 transition-all"
+                      />
+                      <span className="text-sm font-medium text-zinc-200">Permitir análise biométrica</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer select-none group">
+                      <Database className="h-5 w-5 text-violet-400" />
+                      <input
+                        type="checkbox"
+                        checked={prefs.storage}
+                        onChange={() => handleToggle("storage")}
+                        className="accent-violet-400 w-4 h-4 group-hover:scale-110 transition-all"
+                      />
+                      <span className="text-sm font-medium text-zinc-200">
+                        Permitir armazenamento seguro em nossos servidores
+                      </span>
+                    </label>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <button
+                onClick={() => setExpanded((e) => !e)}
+                className="flex items-center gap-1 text-xs text-indigo-400 mt-2 hover:text-indigo-300 transition-all"
+              >
+                {expanded ? (
+                  <>
+                    Ocultar opções avançadas <ChevronUp className="w-3 h-3" />
+                  </>
+                ) : (
+                  <>
+                    Ajustar preferências <ChevronDown className="w-3 h-3" />
+                  </>
+                )}
+              </button>
+            </motion.div>
+
+            {/* Botões */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-6 flex flex-col md:flex-row gap-3 z-10"
+            >
+              <Button
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-indigo-500/30 transition-all hover:scale-[1.03]"
+                size="lg"
+                onClick={handleAccept}
+              >
+                Aceitar e Continuar
+              </Button>
+
+              <Button
+                className="flex-1 bg-transparent border border-indigo-400 text-indigo-400 hover:bg-indigo-500/10 hover:text-white hover:border-indigo-300 transition-all"
+                variant="outline"
+                size="lg"
+                onClick={acceptAll}
+              >
+                Aceitar Todos
+              </Button>
+
+              <Button
+                className="flex-1 border border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all"
+                variant="destructive"
+                size="lg"
+                onClick={handleRefuse}
+              >
+                Recusar e Sair
+              </Button>
+            </motion.div>
+
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-[11px] text-zinc-500 mt-4 text-center block"
+            >
+              Para mais detalhes, leia nossa{" "}
+              <a href="/privacidade" target="_blank" className="underline text-indigo-400 hover:text-indigo-300">
+                Política de Privacidade
+              </a>
+              .
+            </motion.span>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

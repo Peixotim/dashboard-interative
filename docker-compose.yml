@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: emotion_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: emotion
+      POSTGRES_PASSWORD: emotion
+      POSTGRES_DB: emotiondb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./emotion-api
+      dockerfile: Dockerfile
+    container_name: emotion_api
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      # Exemplo de URL de banco para uso futuro
+      DATABASE_URL: postgresql+psycopg2://emotion:emotion@db:5432/emotiondb
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
