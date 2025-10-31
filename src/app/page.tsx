@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+// Assumindo que seus componentes estão em 'app/components/'
 import { Header } from "@/components/Header";
 import { EmotionCard } from "@/components/EmotionCard";
 import { TimelineChart } from "@/components/TimelineChart";
@@ -10,7 +11,7 @@ import { motion } from "framer-motion";
 import { ConsentGate } from "@/components/ConsentGate";
 import { WebcamCapture } from "@/components/WebcamCapture";
 
-
+// 1. Importar os tipos de dados centrais
 import { type EmotionAnalysis } from "@/lib/api"; 
 import { type EmotionData } from "@/services/emotionService"; 
 
@@ -38,7 +39,8 @@ export default function Home() {
 
     const newSnapshot: EmotionData = {
       dominant: data.dominant_emotion,
-      intensity: data.emotions[dominantEmotionKey] || 0,
+      // Dividimos por 100 para normalizar para [0, 1]
+      intensity: (data.emotions[dominantEmotionKey] || 0) / 100,
       scores: data.emotions,
       timestamp: new Date().toISOString(),
     };
@@ -79,9 +81,11 @@ export default function Home() {
             )}
 
             {loading || !atual ? (
-              <div className="flex items-center justify-center p-4 shadow-2xl shadow-indigo-900/20 rounded-lg bg-white dark:bg-zinc-900 h-full min-h-[200px]">
-                <span className="text-zinc-400 text-sm">Aguardando dados...</span>
+              <div className="flex flex-col items-center justify-center gap-3 p-4 shadow-2xl shadow-indigo-900/20 rounded-3xl bg-white/10 dark:bg-zinc-900/50  dark:border-zinc-700/60 h-full min-h-[200px] backdrop-blur-sm">
+                <Loader2 className="animate-spin w-8 h-8 text-zinc-500" />
+                <span className="text-zinc-400 text-sm font-medium">Aguardando dados...</span>
               </div>
+              // --- FIM DA ALTERAÇÃO ---
             ) : (
               <Heatmap data={emotionHistory} />
             )}
