@@ -12,6 +12,15 @@ const EMOTION_COLORS_DARK: Record<string, string> = {
   medo: "#FACC15",      // yellow-500
   nojo: "#10B981",      // emerald-600
   neutro: "#9CA3AF",    // zinc-400
+  
+  // --- Adicionadas as chaves em minúsculas que faltavam ---
+  happy: "#6366F1",
+  sad: "#22D3EE",
+  angry: "#F87171",
+  surprise: "#A78BFA",
+  fear: "#FACC15",
+  disgust: "#10B981",
+  neutral: "#9CA3AF",
 };
 
 // 🌞 Light-mode cores vibrantes
@@ -23,18 +32,33 @@ const EMOTION_COLORS_LIGHT: Record<string, string> = {
   medo: "#FBBF24",
   nojo: "#047857",
   neutro: "#71717A",
+  
+  // --- Adicionadas as chaves em minúsculas que faltavam ---
+  happy: "#2563EB",
+  sad: "#0284C7",
+  angry: "#DC2626",
+  surprise: "#8B5CF6",
+  fear: "#FBBF24",
+  disgust: "#047857",
+  neutral: "#71717A",
 };
 
+// --- ALTERAÇÃO AQUI ---
 interface PieChartProps {
-  scoreSums: Record<string, number>;
+  scores: Record<string, number>; // Renomeado de 'scoreSums' para 'scores'
 }
 
-export function PieChart({ scoreSums }: PieChartProps) {
+export function PieChart({ scores }: PieChartProps) { // Renomeado de 'scoreSums' para 'scores'
+  // --- FIM DA ALTERAÇÃO ---
+
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
   const emotionColors = isDarkMode ? EMOTION_COLORS_DARK : EMOTION_COLORS_LIGHT;
 
-  const data = Object.entries(scoreSums).map(([name, value]) => ({ name, value }));
+  // --- ALTERAÇÃO AQUI ---
+  const data = Object.entries(scores).map(([name, value]) => ({ name, value }));
+  // --- FIM DA ALTERAÇÃO ---
+  
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
@@ -89,17 +113,20 @@ export function PieChart({ scoreSums }: PieChartProps) {
               const { d } = getArc(percent, lastEnd);
               const isHovered = hoveredIdx === i;
               lastEnd += percent * Math.PI * 2;
+              
+              // Garante que a cor é encontrada (ex: 'happy' vs 'Alegria')
+              const colorKey = emoc.name.toLowerCase();
 
               return (
                 <motion.path
                   key={emoc.name}
                   d={d}
-                  stroke={emotionColors[emoc.name]}
+                  stroke={emotionColors[colorKey]}
                   strokeLinecap="round"
                   fill="none"
                   strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
                   style={{
-                    filter: isHovered ? `drop-shadow(0 0 8px ${emotionColors[emoc.name]})` : "none",
+                    filter: isHovered ? `drop-shadow(0 0 8px ${emotionColors[colorKey]})` : "none",
                     cursor: "pointer",
                   }}
                   initial={{ pathLength: 0 }}
@@ -126,12 +153,13 @@ export function PieChart({ scoreSums }: PieChartProps) {
               className="text-3xl font-extrabold"
               style={{
                 color: hoveredIdx !== null
-                  ? emotionColors[data[hoveredIdx].name]
+                  ? emotionColors[data[hoveredIdx].name.toLowerCase()] // Chave em minúsculas
                   : isDarkMode
                   ? "#FFF"
                   : "#1C1D22",
               }}
             >
+              {/* O valor agora é 0-1, então * 100 é a % correta */}
               {hoveredIdx !== null ? `${Math.round(centerValue * 100)}%` : total.toFixed(2)}
             </span>
             <span className={`text-xs font-semibold tracking-wide uppercase ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
@@ -143,27 +171,31 @@ export function PieChart({ scoreSums }: PieChartProps) {
 
       {/* Legenda */}
       <div className="flex flex-wrap gap-2 w-full justify-center mt-4">
-        {data.map(({ name, value }, idx) => (
-          <div
-            key={name}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200"
-            style={{
-              borderColor: emotionColors[name] + "80",
-              backgroundColor: hoveredIdx === idx ? emotionColors[name] + "30" : "transparent",
-              cursor: "pointer",
-            }}
-            onMouseEnter={() => setHoveredIdx(idx)}
-            onMouseLeave={() => setHoveredIdx(null)}
-          >
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: emotionColors[name] }} />
-            <span className={`text-xs font-medium capitalize ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
-              {name}
-            </span>
-            <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
-              {Math.round(value * 100)}%
-            </span>
-          </div>
-        ))}
+        {data.map(({ name, value }, idx) => {
+          const colorKey = name.toLowerCase();
+          return (
+            <div
+              key={name}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200"
+              style={{
+                borderColor: emotionColors[colorKey] + "80",
+                backgroundColor: hoveredIdx === idx ? emotionColors[colorKey] + "30" : "transparent",
+                cursor: "pointer",
+              }}
+              onMouseEnter={() => setHoveredIdx(idx)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: emotionColors[colorKey] }} />
+              <span className={`text-xs font-medium capitalize ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
+                {name}
+              </span>
+              <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
+                {/* O valor agora é 0-1, então * 100 é a % correta */}
+                {Math.round(value * 100)}%
+              </span>
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );

@@ -11,7 +11,6 @@ import { motion } from "framer-motion";
 import { ConsentGate } from "@/components/ConsentGate";
 import { WebcamCapture } from "@/components/WebcamCapture";
 
-// 1. Importar os tipos de dados centrais
 import { type EmotionAnalysis } from "@/lib/api"; 
 import { type EmotionData } from "@/services/emotionService"; 
 
@@ -33,35 +32,42 @@ export default function Home() {
   const handleAnalysisUpdate = (data: EmotionAnalysis) => {
     if (data.dominant_emotion === "Nenhum rosto detectado") return;
 
-   
-    const dominantEmotionKey = data.dominant_emotion.toLowerCase() as keyof typeof data.emotions;
+    // --- INÍCIO DA CORREÇÃO ---
+    // Precisamos de normalizar (dividir por 100) TODOS os scores,
+    // não apenas a 'intensity', para que o PieChart os possa usar.
     
+    const dominantEmotionKey = data.dominant_emotion.toLowerCase() as keyof typeof data.emotions;
 
+    // 1. Cria um novo objeto de scores normalizados (valores de 0 a 1)
+    const normalizedScores: { [key: string]: number } = {};
+    for (const key in data.emotions) {
+      const typedKey = key as keyof typeof data.emotions;
+      normalizedScores[typedKey] = (data.emotions[typedKey] || 0) / 100.0;
+    }
+    
+    // 2. Cria o snapshot usando os scores já normalizados
     const newSnapshot: EmotionData = {
       dominant: data.dominant_emotion,
-      // Dividimos por 100 para normalizar para [0, 1]
-      intensity: (data.emotions[dominantEmotionKey] || 0) / 100,
-      scores: data.emotions,
+      intensity: normalizedScores[dominantEmotionKey] || 0, // Usa o valor já normalizado
+      scores: normalizedScores, // Passa o objeto normalizado
       timestamp: new Date().toISOString(),
     };
-    
-
+    // --- FIM DA CORREÇÃO ---
 
     setEmotionHistory((prev) => [...prev, newSnapshot]);
     setLastUpdate(Date.now());
     if (loading) setLoading(false);
   };
 
-
   const atual = emotionHistory.at(-1);
+
+  // --- REMOVIDO ---
+  // Já não precisamos de calcular o 'scoreSums' (a média)
+  /*
   const scoreSums: Record<string, number> = {};
-  if (emotionHistory.length > 0) {
-    emotionHistory.forEach((d) => {
-      Object.entries(d.scores).forEach(([emo, val]) => {
-        scoreSums[emo] = (scoreSums[emo] || 0) + val / emotionHistory.length;
-      });
-    });
-  }
+  if (emotionHistory.length > 0) { ... }
+  */
+  // --- FIM DA REMOÇÃO ---
 
 
   return (
@@ -81,11 +87,10 @@ export default function Home() {
             )}
 
             {loading || !atual ? (
-              <div className="flex flex-col items-center justify-center gap-3 p-4 shadow-2xl shadow-indigo-900/20 rounded-3xl bg-white/10 dark:bg-zinc-900/50  dark:border-zinc-700/60 h-full min-h-[200px] backdrop-blur-sm">
+              <div className="flex flex-col items-center justify-center gap-3 p-4 shadow-2xl shadow-indigo-900/20 rounded-3xl bg-white/10 dark:bg-zinc-900/50 border border-white/20 dark:border-zinc-700/60 h-full min-h-[200px] backdrop-blur-sm">
                 <Loader2 className="animate-spin w-8 h-8 text-zinc-500" />
                 <span className="text-zinc-400 text-sm font-medium">Aguardando dados...</span>
               </div>
-              // --- FIM DA ALTERAÇÃO ---
             ) : (
               <Heatmap data={emotionHistory} />
             )}
@@ -106,7 +111,11 @@ export default function Home() {
                     <EmotionCard emotion={atual.dominant} intensity={atual.intensity} />
                   </div>
                   <div className="min-w-0">
-                     <PieChart scoreSums={scoreSums} />
+                     {/* --- ALTERAÇÃO AQUI ---
+                         Passamos os 'scores' do último snapshot ('atual'),
+                         e não a média ('scoreSums')
+                     */}
+                     <PieChart scores={atual.scores} />
                   </div>
                 </div>
              
