@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-// Assumindo que seus componentes estão em 'app/components/'
 import { Header } from "@/components/Header";
 import { EmotionCard } from "@/components/EmotionCard";
 import { TimelineChart } from "@/components/TimelineChart";
@@ -11,7 +10,7 @@ import { motion } from "framer-motion";
 import { ConsentGate } from "@/components/ConsentGate";
 import { WebcamCapture } from "@/components/WebcamCapture";
 
-// 1. Importar os tipos de dados centrais
+
 import { type EmotionAnalysis } from "@/lib/api"; 
 import { type EmotionData } from "@/services/emotionService"; 
 
@@ -33,28 +32,25 @@ export default function Home() {
   const handleAnalysisUpdate = (data: EmotionAnalysis) => {
     if (data.dominant_emotion === "Nenhum rosto detectado") return;
 
-    // --- INÍCIO DA CORREÇÃO ---
-
-    // 1. Dizemos ao TypeScript que esta string é, de facto, uma das chaves de 'data.emotions'
+   
     const dominantEmotionKey = data.dominant_emotion.toLowerCase() as keyof typeof data.emotions;
     
-    // 2. Agora usamos a nossa 'dominantEmotionKey' segura
+
     const newSnapshot: EmotionData = {
       dominant: data.dominant_emotion,
-      // Usamos a chave segura para aceder ao valor
       intensity: data.emotions[dominantEmotionKey] || 0,
       scores: data.emotions,
       timestamp: new Date().toISOString(),
     };
     
-    // --- FIM DA CORREÇÃO ---
+
 
     setEmotionHistory((prev) => [...prev, newSnapshot]);
     setLastUpdate(Date.now());
     if (loading) setLoading(false);
   };
 
-  // Cálculos para os gráficos (sem alterações)
+
   const atual = emotionHistory.at(-1);
   const scoreSums: Record<string, number> = {};
   if (emotionHistory.length > 0) {
@@ -65,7 +61,7 @@ export default function Home() {
     });
   }
 
-  // JSX (sem alterações visuais)
+
   return (
     <main className="w-full min-h-screen flex flex-col bg-transparent p-2 md:p-6 xl:p-10 gap-8 font-main relative">
       {!consented && <ConsentGate onAccept={prefs => setConsentPrefs(prefs)} />}
@@ -83,7 +79,7 @@ export default function Home() {
             )}
 
             {loading || !atual ? (
-              <div className="flex items-center justify-center p-4 border rounded-lg bg-white dark:bg-zinc-900 h-full min-h-[200px]">
+              <div className="flex items-center justify-center p-4 shadow-2xl shadow-indigo-900/20 rounded-lg bg-white dark:bg-zinc-900 h-full min-h-[200px]">
                 <span className="text-zinc-400 text-sm">Aguardando dados...</span>
               </div>
             ) : (
