@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
-import { CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { CartesianGrid, XAxis, YAxis,ResponsiveContainer, Area, AreaChart,Tooltip} from "recharts";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import type { EmotionData } from "./types/emotion";
+import type { EmotionData } from "@/services/emotionService";
+
+
+
 
 const ranges = [
   { value: "30", label: "Últimos 1:30" },
@@ -53,7 +56,7 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
   const chartData = data.slice(-parseInt(range));
 
   const strokeColor = isDarkMode ? "#818CF8" : "#4F46E5";
-  const gradientStart = isDarkMode ? "#818CF8" : "#A5B4FC"; // azul suave no light-mode
+  const gradientStart = isDarkMode ? "#818CF8" : "#A5B4FC";
   const gradientStop = isDarkMode ? "#818CF8" : "#C7D2FE";
 
   return (
@@ -91,10 +94,10 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
               style={{ fontSize: 12, fill: isDarkMode ? "#a1a1aa" : "#52525B" }}
             />
             <YAxis
-              domain={[0, 1]}
-              axisLine={false}
+              domain={[0, 1]} // O seu 'intensity' (calculado em page.tsx) já é um número entre 0 e 100
               tickLine={false}
-              tickFormatter={(v) => `${v * 100}%`}
+              axisLine={false}
+              tickFormatter={(v) => `${v * 100}%`} // Formatamos para %
               style={{ fontSize: 12, fill: isDarkMode ? "#a1a1aa" : "#52525B" }}
             />
             <Tooltip
@@ -107,7 +110,8 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
                     <div className={`${isDarkMode ? "text-zinc-300" : "text-zinc-700"} pb-0.5`}>
                       {new Date(label as string).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                     </div>
-                    <div className={`font-bold ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`}>{Math.round(y*100)}% de intensidade</div>
+                    {/* // Corrigido: Multiplicamos por 100 para exibir a percentagem correta */}
+                    <div className={`font-bold ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`}>{Math.round(y * 100)}% de intensidade</div>
                   </div>
                 );
               }}
@@ -134,5 +138,3 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
     </motion.div>
   );
 }
-
-

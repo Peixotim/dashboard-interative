@@ -45,7 +45,7 @@ export function Heatmap({ data }: HeatmapProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
       className={`w-full h-full flex flex-col rounded-3xl p-6
-                  ${isDarkMode ? "bg-zinc-900/50 shadow-2xl shadow-purple-700/20" : "bg-white border border border-zinc-200 shadow-zinc-400/20  "}`}
+                  ${isDarkMode ? "bg-zinc-900/50 shadow-2xl shadow-purple-700/20" : "bg-white border  border-zinc-200 shadow-zinc-400/20  "}`}
     >
       <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
         Linha do Tempo Emocional
