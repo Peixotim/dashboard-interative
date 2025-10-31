@@ -6,14 +6,18 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 
+// Importamos nossas funções e tipos da camada de API
+import { startSession, analyzeEmotion, type EmotionAnalysis } from "@/lib/api"; 
+// (Ajuste o caminho "@/lib/api" conforme a estrutura do seu projeto)
+
 interface WebcamCaptureProps {
-  onCapture?: (imgBase64: string) => void;
+  onAnalysisUpdate?: (data: EmotionAnalysis) => void;
   autoStart?: boolean;
   captureInterval?: number;
 }
 
 export function WebcamCapture({
-  onCapture,
+  onAnalysisUpdate,
   autoStart = false,
   captureInterval = 2000,
 }: WebcamCaptureProps) {
@@ -28,12 +32,14 @@ export function WebcamCapture({
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
 
-  // Inicia a câmera
+  const [sessionUuid, setSessionUuid] = useState<string | null>(null);
+  const [dominantEmotion, setDominantEmotion] = useState<string | null>(null);
+
   async function startCamera() {
     setLoading(true);
     setError(null);
+    setDominantEmotion(null);
 
-    // ✅ Checagem de suporte à API
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setLoading(false);
       setError("Seu navegador não suporta acesso à câmera ou não está usando HTTPS/localhost.");
@@ -41,15 +47,32 @@ export function WebcamCapture({
     }
 
     try {
+      // 1. Pedir permissão e iniciar a câmera
       const s = await navigator.mediaDevices.getUserMedia({ video: true });
-      setStream(s);
       if (videoRef.current) videoRef.current.srcObject = s;
+      setStream(s);
+
+      // 2. Iniciar a sessão com o backend
+      const sessionData = await startSession();
+      setSessionUuid(sessionData.session_uuid);
+      console.log("Sessão iniciada com UUID:", sessionData.session_uuid);
+
       setStarted(true);
-    } catch (err) {
-      console.error(err);
-      setError(
-        "Não foi possível acessar a câmera. Verifique as permissões e se o site está em HTTPS ou localhost."
-      );
+    } catch (err: unknown) { // <-- ALTERADO: de 'any' para 'unknown'
+      console.error(err); // Logamos o objeto de erro completo
+      
+      // INÍCIO DA ALTERAÇÃO: Type Guard
+      // Verificamos se o erro é uma instância da classe 'Error'
+      if (err instanceof Error) {
+        // Se for, agora o TypeScript sabe que 'err' tem a propriedade 'message'
+        setError(err.message);
+      } else {
+        // Fallback para caso alguém tenha lançado algo que não é um Error
+        setError("Não foi possível acessar a câmera ou iniciar a sessão. Erro desconhecido.");
+      }
+      // FIM DA ALTERAÇÃO
+      
+      stopCamera();
     } finally {
       setLoading(false);
     }
@@ -61,11 +84,44 @@ export function WebcamCapture({
     if (intervalRef.current) clearInterval(intervalRef.current);
     setStream(null);
     setStarted(false);
+    setSessionUuid(null);
+    setDominantEmotion(null);
   }
 
-  // Captura periódica de frames
+  // useEffect com a lógica de análise
   useEffect(() => {
-    if (!started || !videoRef.current) return;
+    
+    const sendFrameForAnalysis = async (frame: string) => {
+      if (!sessionUuid) return;
+
+      try {
+        const result = await analyzeEmotion({
+          session_uuid: sessionUuid,
+          image_base64: frame,
+        });
+
+        if (result.dominant_emotion !== "Nenhum rosto detectado") {
+          const DdominantEmotion = result.dominant_emotion.charAt(0).toUpperCase() + result.dominant_emotion.slice(1);
+          setDominantEmotion(DdominantEmotion);
+        }
+
+        onAnalysisUpdate?.(result);
+
+      } catch (err: unknown) { // <-- ALTERADO: de 'error' implícito (any) para 'unknown'
+        
+        // INÍCIO DA ALTERAÇÃO: Type Guard (apenas para log)
+        // Como este erro é transiente, apenas logamos a mensagem de forma segura
+        if (err instanceof Error) {
+          console.error(`Falha na análise do frame: ${err.message}`);
+        } else {
+          console.error("Falha na análise do frame: Erro desconhecido.", err);
+        }
+        // FIM DA ALTERAÇÃO
+      }
+    };
+
+    // --- Lógica do Intervalo (sem alterações) ---
+    if (!started || !videoRef.current || !sessionUuid) return;
 
     intervalRef.current = setInterval(() => {
       const video = videoRef.current!;
@@ -82,14 +138,17 @@ export function WebcamCapture({
 
       setFrames((prev) => (prev.length >= 30 ? [...prev.slice(1), frame] : [...prev, frame]));
 
-      onCapture?.(frame);
+      sendFrameForAnalysis(frame);
+
     }, captureInterval);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [started, captureInterval, onCapture]);
+  }, [started, captureInterval, onAnalysisUpdate, sessionUuid]);
 
+  // --- O JSX permanece exatamente o mesmo ---
+  // --- Nenhuma alteração visual foi feita ---
   return (
     <motion.div
       layout
@@ -155,13 +214,13 @@ export function WebcamCapture({
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center bg-gradient-to-t from-black/60 to-transparent rounded-b-2xl"
+            className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center bg-linear-to-t from-black/60 to-transparent rounded-b-2xl"
           >
             <div className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium text-white ring-1 ring-white/10">
               <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
                 <CircleDot className="h-3 w-3 text-emerald-400" />
               </motion.div>
-              Analisando
+              {dominantEmotion ? `Analisando: ${dominantEmotion}` : "Analisando..."}
             </div>
             <Button
               variant="ghost"
@@ -182,7 +241,7 @@ export function WebcamCapture({
             <motion.div key="start-button" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="w-full">
               <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
                 <Button
-                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold h-12 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 text-base"
+                  className="w-full bg-linear-to-r from-indigo-500 to-purple-600 text-white font-semibold h-12 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 text-base"
                   onClick={startCamera}
                   disabled={loading}
                 >

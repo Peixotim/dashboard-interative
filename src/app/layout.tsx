@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dashboard Emocional | SaaS Minimal UI",
+  title: "Dashboard Emocional",
   description: "Visualização de emoções em tempo real para ambientes profissionais",
 };
 
