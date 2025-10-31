@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
+import type { EmotionData } from "./types/emotion";
 
 const ranges = [
   { value: "30", label: "Últimos 1:30" },
@@ -61,7 +62,7 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.55, type: "spring", bounce: 0.33 }}
       className={`w-full h-full flex flex-col gap-4 rounded-3xl p-6
-                  ${isDarkMode ? "bg-zinc-900/50 shadow-2xl shadow-indigo-900/20" : "bg-white shadow-md shadow-zinc-200/50"}`}
+                  ${isDarkMode ? "bg-zinc-900/50 shadow-2xl shadow-indigo-900/20" : "bg-white shadow-md border border-zinc-200 shadow-zinc-400/20"}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-col">
@@ -134,8 +135,4 @@ export function TimelineChart({ data }: { data: EmotionData[] }) {
   );
 }
 
-export type EmotionData = {
-  timestamp: number;
-  intensity: number;
-  emotion: string;
-};
+

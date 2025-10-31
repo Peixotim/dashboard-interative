@@ -5,6 +5,7 @@ export type EmotionData = {
   scores: Record<string, number>;
 };
 
+
 const emotions = [
   "Alegria", "Tristeza", "Raiva", "Surpresa", "Medo", "Nojo", "Neutro",
 ];

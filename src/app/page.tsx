@@ -98,7 +98,7 @@ export default function Home() {
                    
                 </div>
               </div>
-                            {/* Gráfico de Linha principal */}
+           
               <div className="min-w-0 h-[400px]">
                 <TimelineChart data={data} />
               </div>
