@@ -84,28 +84,29 @@ export default function Home() {
                   }
                 }} />
               )}
-              <EmotionCard emotion={atual.dominant} intensity={atual.intensity} />
+             <Heatmap data={data} />
             </div>
 
             {/* --- COLUNA DIREITA (Área de Análise Principal) --- */}
             {/* Ocupa 2 de 3 colunas em telas grandes, dando foco ao gráfico */}
             <div className="lg:col-span-2 flex flex-col gap-8">
               
-              {/* Gráfico de Linha principal */}
-              <div className="min-w-0 h-[400px]">
-                <TimelineChart data={data} />
-              </div>
+
 
               {/* Sub-grid para PieChart e Heatmap lado a lado */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="min-w-0">
-                  <PieChart scoreSums={scoreSums} />
+                  <EmotionCard emotion={atual.dominant} intensity={atual.intensity} />
                 </div>
                 <div className="min-w-0">
-                  <Heatmap data={data} />
+                   <PieChart scoreSums={scoreSums} />
+                   
                 </div>
               </div>
-              
+                            {/* Gráfico de Linha principal */}
+              <div className="min-w-0 h-[400px]">
+                <TimelineChart data={data} />
+              </div>
             </div>
           </div>
         )}
