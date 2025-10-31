@@ -50,7 +50,7 @@ export default function Home() {
   }, [consented]);
 
   return (
-    <main className="w-full min-h-screen flex flex-col bg-transparent p-2 md:p-6 xl:p-10 gap-8 font-[var(--font-main)] relative">
+    <main className="w-full min-h-screen flex flex-col bg-transparent p-2 md:p-6 xl:p-10 gap-8 font-main relative">
       {!consented && <ConsentGate onAccept={prefs => setConsentPrefs(prefs)} />}
       {consented && <>
         <Header lastUpdate={lastUpdate} />
@@ -62,14 +62,10 @@ export default function Home() {
             </motion.div>
           </div>
         ) : (
-          // ✅ NOVO LAYOUT DE GRID ASSIMÉTRICO
-          // Em telas grandes (lg), criamos um grid de 3 colunas.
-          // A coluna da esquerda (sidebar) ocupa 1 fração (col-span-1).
-          // A coluna da direita (principal) ocupa 2 frações (col-span-2).
+     
           <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
             
-            {/* --- COLUNA ESQUERDA (Sidebar de Estado Atual) --- */}
-            {/* Ocupa 1 de 3 colunas em telas grandes */}
+
             <div className="lg:col-span-1 flex flex-col gap-8">
               {consentPrefs?.camera && (
                 <WebcamCapture onCapture={async (frame) => {
@@ -87,8 +83,7 @@ export default function Home() {
              <Heatmap data={data} />
             </div>
 
-            {/* --- COLUNA DIREITA (Área de Análise Principal) --- */}
-            {/* Ocupa 2 de 3 colunas em telas grandes, dando foco ao gráfico */}
+    
             <div className="lg:col-span-2 flex flex-col gap-8">
               
 
